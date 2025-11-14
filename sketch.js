@@ -23,8 +23,8 @@ let maxSpeed = 15;
 
 // Inicializa osciladores y envolventes
 function initAudio() {
-  oscUp = new p5.Oscillator("triangle");
-  oscDown = new p5.Oscillator("triangle");
+  oscUp = new p5.Oscillator("sawtooth"); // mejor resonancia
+  oscDown = new p5.Oscillator("square");
 
   envUp = new p5.Envelope();
   envDown = new p5.Envelope();
@@ -136,24 +136,29 @@ function draw() {
   // AUDIO SAFE VERSION
 
   if (Math.abs(vy) < soundThreshold) {
-    if (oscUp) oscUp.amp(0, 0.1);
-    if (oscDown) oscDown.amp(0, 0.1);
+    if (oscUp) oscUp.amp(0, 0.15);
+    if (oscDown) oscDown.amp(0, 0.15);
   } else {
-    let normSpeed = Math.min(Math.max(Math.abs(vy) / maxSpeed, 0), 1);
+    let norm = Math.min(Math.abs(vy) / maxSpeed, 1);
+
+    // Vibración aleatoria (como el objeto dentro del tubo)
+    let wobble = noise(frameCount * 0.03) * 40;
 
     if (vy < 0) {
+      // SUBE → sonido grave con vibración
       if (oscDown) oscDown.amp(0, 0.2);
       if (oscUp) {
-        oscUp.amp(normSpeed * 0.4, 0.1);
-        oscUp.freq(150 + normSpeed * 200);
+        oscUp.amp(0.4 * norm, 0.05);
+        oscUp.freq(120 + norm * 300 + wobble);
       }
     }
 
     if (vy > 0) {
+      // BAJA → sonido agudo con chirrido
       if (oscUp) oscUp.amp(0, 0.2);
       if (oscDown) {
-        oscDown.amp(normSpeed * 0.4, 0.1);
-        oscDown.freq(120 + normSpeed * 180);
+        oscDown.amp(0.4 * norm, 0.05);
+        oscDown.freq(180 + norm * 350 + wobble * 1.5);
       }
     }
   }
