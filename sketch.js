@@ -1,3 +1,7 @@
+// Motion-controlled ball with proper device motion permission + physics integration
+// iOS 13+ requires an explicit user gesture to grant motion sensor access.
+// This sketch shows a small button to enable motion on supported devices.
+
 const CANVAS_SIZE_PERCENT = 0.8; // canvas size as percent of smaller screen dimension
 
 let ax = 0,
@@ -12,6 +16,28 @@ let permissionBtn; // UI button for iOS permission
 
 let invertX = false;
 let invertY = false;
+let oscUp, oscDown;
+let envUp, envDown;
+let soundThreshold = 0.5; // velocidad mínima para sonar
+let maxSpeed = 15;
+
+// Inicializa osciladores y envolventes
+function initAudio() {
+  oscUp = new p5.Oscillator("triangle");
+  oscDown = new p5.Oscillator("triangle");
+
+  envUp = new p5.Envelope();
+  envDown = new p5.Envelope();
+
+  envUp.setADSR(0.01, 0.1, 0.5, 0.2);
+  envDown.setADSR(0.01, 0.1, 0.5, 0.2);
+
+  oscUp.start();
+  oscDown.start();
+
+  oscUp.amp(0);
+  oscDown.amp(0);
+}
 
 const invertXCheckbox = document.getElementById("invertX");
 const invertYCheckbox = document.getElementById("invertY");
@@ -37,6 +63,7 @@ permissionButton.addEventListener("click", async (e) => {
     try {
       const response = await DeviceMotionEvent.requestPermission();
       if (response === "granted") {
+        initAudio();
         startMotion();
       }
     } catch (error) {
@@ -44,6 +71,7 @@ permissionButton.addEventListener("click", async (e) => {
     }
   } else {
     // Other platforms: start listening right away
+    initAudio();
     startMotion();
   }
 });
@@ -105,6 +133,30 @@ function draw() {
     ypos = r;
     vy *= -0.8;
   }
+  // AUDIO SAFE VERSION
+
+  if (Math.abs(vy) < soundThreshold) {
+    if (oscUp) oscUp.amp(0, 0.1);
+    if (oscDown) oscDown.amp(0, 0.1);
+  } else {
+    let normSpeed = Math.min(Math.max(Math.abs(vy) / maxSpeed, 0), 1);
+
+    if (vy < 0) {
+      if (oscDown) oscDown.amp(0, 0.2);
+      if (oscUp) {
+        oscUp.amp(normSpeed * 0.4, 0.1);
+        oscUp.freq(150 + normSpeed * 200);
+      }
+    }
+
+    if (vy > 0) {
+      if (oscUp) oscUp.amp(0, 0.2);
+      if (oscDown) {
+        oscDown.amp(normSpeed * 0.4, 0.1);
+        oscDown.freq(120 + normSpeed * 180);
+      }
+    }
+  }
 
   // Draw ball
   noStroke();
@@ -154,9 +206,10 @@ function getScreenAngle() {
 
 function rotate2D(x, y, deg) {
   const rad = (deg * Math.PI) / 180;
-  const cosA = Math.cos(rad);
-  const sinA = Math.sin(rad);
-  return { x: x * cosA - y * sinA, y: x * sinA + y * cosA };
+  return {
+    x: x * Math.cos(rad) - y * Math.sin(rad),
+    y: x * Math.sin(rad) + y * Math.cos(rad),
+  };
 }
 
 function mapMotionToScreen(axDev, ayDev) {
