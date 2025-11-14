@@ -10,8 +10,8 @@ let ax = 0,
 let vx = 0,
   vy = 0; // velocity we integrate from acceleration
 let xpos, ypos; // position
-let friction = 0.98; // simple damping to avoid runaway speeds
-let accelScale = 1.2; // scale factor to tune sensitivity
+let friction = 0.85; // simple damping to avoid runaway speeds
+let accelScale = 0.35; // scale factor to tune sensitivity
 let permissionBtn; // UI button for iOS permission
 
 let invertX = false;
