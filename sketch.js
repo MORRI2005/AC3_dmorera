@@ -20,11 +20,16 @@ let oscUp, oscDown;
 let envUp, envDown;
 let soundThreshold = 0.5; // velocidad mínima para sonar
 let maxSpeed = 15;
+let delay;
 
 // Inicializa osciladores y envolventes
 function initAudio() {
   oscUp = new p5.Oscillator("sawtooth"); // mejor resonancia
   oscDown = new p5.Oscillator("square");
+
+  delay = new p5.Delay();
+  delay.process(oscUp, 0.12, 0.4, 1800); // fuente, tiempo, feedback, freq del filtro
+  delay.process(oscDown, 0.12, 0.4, 1800);
 
   envUp = new p5.Envelope();
   envDown = new p5.Envelope();
