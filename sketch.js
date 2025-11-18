@@ -18,17 +18,16 @@ let invertX = false;
 let invertY = false;
 let oscUp, oscDown;
 let envUp, envDown;
-let soundThreshold = 0.5; // velocidad mínima para sonar
+let soundThreshold = 0.5;
 let maxSpeed = 15;
 let delay;
 
-// Inicializa osciladores y envolventes
 function initAudio() {
-  oscUp = new p5.Oscillator("sawtooth"); // mejor resonancia
+  oscUp = new p5.Oscillator("sawtooth");
   oscDown = new p5.Oscillator("square");
 
   delay = new p5.Delay();
-  delay.process(oscUp, 0.12, 0.4, 1800); // fuente, tiempo, feedback, freq del filtro
+  delay.process(oscUp, 0.12, 0.4, 1800);
   delay.process(oscDown, 0.12, 0.4, 1800);
 
   envUp = new p5.Envelope();
@@ -138,7 +137,6 @@ function draw() {
     ypos = r;
     vy *= -0.8;
   }
-  // AUDIO SAFE VERSION
 
   if (Math.abs(vy) < soundThreshold) {
     if (oscUp) oscUp.amp(0, 0.15);
@@ -146,11 +144,9 @@ function draw() {
   } else {
     let norm = Math.min(Math.abs(vy) / maxSpeed, 1);
 
-    // Vibración aleatoria (como el objeto dentro del tubo)
     let wobble = noise(frameCount * 0.03) * 40;
 
     if (vy < 0) {
-      // SUBE → sonido grave con vibración
       if (oscDown) oscDown.amp(0, 0.2);
       if (oscUp) {
         oscUp.amp(0.4 * norm, 0.05);
@@ -159,7 +155,6 @@ function draw() {
     }
 
     if (vy > 0) {
-      // BAJA → sonido agudo con chirrido
       if (oscUp) oscUp.amp(0, 0.2);
       if (oscDown) {
         oscDown.amp(0.4 * norm, 0.05);
